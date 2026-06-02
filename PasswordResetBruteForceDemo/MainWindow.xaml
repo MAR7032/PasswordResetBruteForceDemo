@@ -1,12 +1,85 @@
 ﻿<Window x:Class="PasswordResetBruteForceDemo.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:PasswordResetBruteForceDemo"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="Password Reset Brute Force Demo"
+        Height="600"
+        Width="850"
+        WindowStartupLocation="CenterScreen">
 
+    <Grid Margin="20">
+        <StackPanel>
+
+            <TextBlock Text="Password Reset Brute Force Demo"
+                       FontSize="26"
+                       FontWeight="Bold"
+                       Margin="0,0,0,20"/>
+
+            <Button x:Name="GeneratePasswordButton"
+                    Content="Generate Password"
+                    Width="180"
+                    Height="35"
+                    HorizontalAlignment="Left"
+                    Margin="0,0,0,15"/>
+
+            <TextBlock Text="Generated Password:" FontWeight="Bold"/>
+            <TextBox x:Name="GeneratedPasswordTextBox"
+                     Height="30"
+                     Margin="0,5,0,10"
+                     IsReadOnly="True"/>
+
+            <TextBlock Text="SHA256 Hash:" FontWeight="Bold"/>
+            <TextBox x:Name="HashTextBox"
+                     Height="30"
+                     Margin="0,5,0,20"
+                     IsReadOnly="True"/>
+
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                <Button x:Name="StartSingleThreadButton"
+                        Content="Start Single Thread Attack"
+                        Width="200"
+                        Height="35"
+                        Margin="0,0,10,0"/>
+
+                <Button x:Name="StartMultiThreadButton"
+                        Content="Start Multi Thread Attack"
+                        Width="200"
+                        Height="35"
+                        Margin="0,0,10,0"/>
+
+                <Button x:Name="StopButton"
+                        Content="Stop Attack"
+                        Width="120"
+                        Height="35"/>
+            </StackPanel>
+
+            <TextBlock Text="Progress:" FontWeight="Bold"/>
+            <ProgressBar x:Name="AttackProgressBar"
+                         Height="25"
+                         Minimum="0"
+                         Maximum="100"
+                         Value="0"
+                         Margin="0,5,0,15"/>
+
+            <TextBlock Text="Elapsed Time:" FontWeight="Bold"/>
+            <TextBox x:Name="ElapsedTimeTextBox"
+                     Height="30"
+                     Margin="0,5,0,15"
+                     IsReadOnly="True"/>
+
+            <TextBlock Text="Found Password:" FontWeight="Bold"/>
+            <TextBox x:Name="FoundPasswordTextBox"
+                     Height="30"
+                     Margin="0,5,0,15"
+                     IsReadOnly="True"/>
+
+            <TextBlock Text="Performance Log:" FontWeight="Bold"/>
+            <TextBox x:Name="PerformanceLogTextBox"
+                     Height="100"
+                     Margin="0,5,0,0"
+                     IsReadOnly="True"
+                     TextWrapping="Wrap"
+                     AcceptsReturn="True"/>
+
+        </StackPanel>
     </Grid>
 </Window>
