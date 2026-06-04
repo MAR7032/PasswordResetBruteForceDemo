@@ -19,7 +19,8 @@
                     Width="180"
                     Height="35"
                     HorizontalAlignment="Left"
-                    Margin="0,0,0,15"/>
+                    Margin="0,0,0,15"
+                    Click="GeneratePasswordButton_Click"/>
 
             <TextBlock Text="Generated Password:" FontWeight="Bold"/>
             <TextBox x:Name="GeneratedPasswordTextBox"
