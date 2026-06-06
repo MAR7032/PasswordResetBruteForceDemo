@@ -46,7 +46,8 @@
                         Content="Start Multi Thread Attack"
                         Width="200"
                         Height="35"
-                        Margin="0,0,10,0"/>
+                        Margin="0,0,10,0"
+                        Click="StartMultiThreadButton_Click"/>
 
                 <Button x:Name="StopButton"
                         Content="Stop Attack"

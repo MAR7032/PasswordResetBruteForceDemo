@@ -52,5 +52,30 @@ namespace PasswordResetBruteForceDemo
                 "\nAttempts: " + result.Attempts +
                 "\nElapsed time: " + result.ElapsedTime;
         }
+
+        private void StartMultiThreadButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (HashTextBox.Text == "")
+            {
+                MessageBox.Show("Please generate a password first.");
+                return;
+            }
+
+            PerformanceLogTextBox.Text = "Multi-thread brute force attack started...";
+            AttackProgressBar.Value = 25;
+
+            AttackResult result = attackService.RunMultiThreadAttack(HashTextBox.Text);
+
+            AttackProgressBar.Value = 100;
+            ElapsedTimeTextBox.Text = result.ElapsedTime.ToString();
+            FoundPasswordTextBox.Text = result.FoundPassword;
+
+            PerformanceLogTextBox.Text =
+                "Multi-thread attack finished." +
+                "\nPassword found: " + result.IsFound +
+                "\nFound password: " + result.FoundPassword +
+                "\nAttempts: " + result.Attempts +
+                "\nElapsed time: " + result.ElapsedTime;
+        }
     }
 }

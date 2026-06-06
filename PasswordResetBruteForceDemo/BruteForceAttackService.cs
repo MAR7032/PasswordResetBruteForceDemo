@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PasswordResetBruteForceDemo
 {
@@ -16,8 +18,6 @@ namespace PasswordResetBruteForceDemo
 
             long attempts = 0;
 
-            // The attack starts from length 1 and goes up to length 6.
-            // It does not know the real password length.
             for (int length = 1; length <= 6; length++)
             {
                 List<string> combinations = generator.GenerateCombinations(length);
@@ -49,6 +49,61 @@ namespace PasswordResetBruteForceDemo
             {
                 IsFound = false,
                 FoundPassword = "",
+                Attempts = attempts,
+                ElapsedTime = stopwatch.Elapsed
+            };
+        }
+
+        public AttackResult RunMultiThreadAttack(string targetHash)
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            long attempts = 0;
+            bool isFound = false;
+            string foundPassword = "";
+
+            int maxThreads = Math.Max(1, Environment.ProcessorCount - 1);
+
+            ParallelOptions options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = maxThreads
+            };
+
+            for (int length = 1; length <= 6; length++)
+            {
+                if (isFound)
+                {
+                    break;
+                }
+
+                List<string> combinations = generator.GenerateCombinations(length);
+
+                Parallel.ForEach(combinations, options, (guess, loopState) =>
+                {
+                    if (isFound)
+                    {
+                        loopState.Stop();
+                        return;
+                    }
+
+                    Interlocked.Increment(ref attempts);
+
+                    if (validator.IsPasswordCorrect(guess, targetHash))
+                    {
+                        foundPassword = guess;
+                        isFound = true;
+                        loopState.Stop();
+                    }
+                });
+            }
+
+            stopwatch.Stop();
+
+            return new AttackResult
+            {
+                IsFound = isFound,
+                FoundPassword = foundPassword,
                 Attempts = attempts,
                 ElapsedTime = stopwatch.Elapsed
             };
