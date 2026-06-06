@@ -6,6 +6,7 @@ namespace PasswordResetBruteForceDemo
     {
         private PasswordGenerator passwordGenerator = new PasswordGenerator();
         private HashService hashService = new HashService();
+        private BruteForceAttackService attackService = new BruteForceAttackService();
 
         public MainWindow()
         {
@@ -23,7 +24,33 @@ namespace PasswordResetBruteForceDemo
             FoundPasswordTextBox.Text = "";
             ElapsedTimeTextBox.Text = "";
             AttackProgressBar.Value = 0;
+
             PerformanceLogTextBox.Text = "Password generated and hashed successfully.";
+        }
+
+        private void StartSingleThreadButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (HashTextBox.Text == "")
+            {
+                MessageBox.Show("Please generate a password first.");
+                return;
+            }
+
+            PerformanceLogTextBox.Text = "Single-thread brute force attack started...";
+            AttackProgressBar.Value = 25;
+
+            AttackResult result = attackService.RunSingleThreadAttack(HashTextBox.Text);
+
+            AttackProgressBar.Value = 100;
+            ElapsedTimeTextBox.Text = result.ElapsedTime.ToString();
+            FoundPasswordTextBox.Text = result.FoundPassword;
+
+            PerformanceLogTextBox.Text =
+                "Single-thread attack finished." +
+                "\nPassword found: " + result.IsFound +
+                "\nFound password: " + result.FoundPassword +
+                "\nAttempts: " + result.Attempts +
+                "\nElapsed time: " + result.ElapsedTime;
         }
     }
 }

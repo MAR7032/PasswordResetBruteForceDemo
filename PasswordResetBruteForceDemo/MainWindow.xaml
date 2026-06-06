@@ -39,7 +39,8 @@
                         Content="Start Single Thread Attack"
                         Width="200"
                         Height="35"
-                        Margin="0,0,10,0"/>
+                        Margin="0,0,10,0"
+                        Click="StartSingleThreadButton_Click"/>
 
                 <Button x:Name="StartMultiThreadButton"
                         Content="Start Multi Thread Attack"
