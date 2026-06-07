@@ -1,4 +1,7 @@
-﻿using System.Windows;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace PasswordResetBruteForceDemo
 {
@@ -11,6 +14,8 @@ namespace PasswordResetBruteForceDemo
 
         private AttackResult lastSingleThreadResult;
         private AttackResult lastMultiThreadResult;
+
+        private CancellationTokenSource cancellationTokenSource;
 
         public MainWindow()
         {
@@ -35,7 +40,7 @@ namespace PasswordResetBruteForceDemo
             PerformanceLogTextBox.Text = "Password generated and hashed successfully.";
         }
 
-        private void StartSingleThreadButton_Click(object sender, RoutedEventArgs e)
+        private async void StartSingleThreadButton_Click(object sender, RoutedEventArgs e)
         {
             if (HashTextBox.Text == "")
             {
@@ -43,27 +48,56 @@ namespace PasswordResetBruteForceDemo
                 return;
             }
 
-            PerformanceLogTextBox.Text = "Single-thread brute force attack started...";
-            AttackProgressBar.Value = 25;
+            try
+            {
+                string targetHash = HashTextBox.Text;
 
-            AttackResult result = attackService.RunSingleThreadAttack(HashTextBox.Text);
-            lastSingleThreadResult = result;
+                cancellationTokenSource = new CancellationTokenSource();
 
-            AttackProgressBar.Value = 100;
-            ElapsedTimeTextBox.Text = result.ElapsedTime.ToString();
-            FoundPasswordTextBox.Text = result.FoundPassword;
+                PerformanceLogTextBox.Text = "Single-thread brute force attack started...";
+                AttackProgressBar.Value = 25;
 
-            PerformanceLogTextBox.Text =
-                "Single-thread attack finished." +
-                "\nPassword found: " + result.IsFound +
-                "\nFound password: " + result.FoundPassword +
-                "\nAttempts: " + result.Attempts +
-                "\nElapsed time: " + result.ElapsedTime;
+                AttackResult result = await Task.Run(() =>
+                    attackService.RunSingleThreadAttack(targetHash, cancellationTokenSource.Token)
+                );
 
-            ShowComparisonIfBothAttacksDone();
+                lastSingleThreadResult = result;
+
+                AttackProgressBar.Value = 100;
+                ElapsedTimeTextBox.Text = result.ElapsedTime.ToString();
+                FoundPasswordTextBox.Text = result.FoundPassword;
+
+                if (result.IsFound)
+                {
+                    PerformanceLogTextBox.Text =
+                        "Single-thread attack finished." +
+                        "\nPassword found: " + result.IsFound +
+                        "\nFound password: " + result.FoundPassword +
+                        "\nAttempts: " + result.Attempts +
+                        "\nElapsed time: " + result.ElapsedTime;
+                }
+                else
+                {
+                    AttackProgressBar.Value = 0;
+
+                    PerformanceLogTextBox.Text =
+                        "Single-thread attack stopped or password not found." +
+                        "\nAttempts: " + result.Attempts +
+                        "\nElapsed time: " + result.ElapsedTime;
+                }
+
+                ShowComparisonIfBothAttacksDone();
+
+                MessageBox.Show("Single-thread attack finished. You can take screenshot now.");
+            }
+            catch (Exception ex)
+            {
+                AttackProgressBar.Value = 0;
+                MessageBox.Show("Error: " + ex.Message);
+            }
         }
 
-        private void StartMultiThreadButton_Click(object sender, RoutedEventArgs e)
+        private async void StartMultiThreadButton_Click(object sender, RoutedEventArgs e)
         {
             if (HashTextBox.Text == "")
             {
@@ -71,24 +105,63 @@ namespace PasswordResetBruteForceDemo
                 return;
             }
 
-            PerformanceLogTextBox.Text = "Multi-thread brute force attack started...";
-            AttackProgressBar.Value = 25;
+            try
+            {
+                string targetHash = HashTextBox.Text;
 
-            AttackResult result = attackService.RunMultiThreadAttack(HashTextBox.Text);
-            lastMultiThreadResult = result;
+                cancellationTokenSource = new CancellationTokenSource();
 
-            AttackProgressBar.Value = 100;
-            ElapsedTimeTextBox.Text = result.ElapsedTime.ToString();
-            FoundPasswordTextBox.Text = result.FoundPassword;
+                PerformanceLogTextBox.Text = "Multi-thread brute force attack started...";
+                AttackProgressBar.Value = 25;
 
-            PerformanceLogTextBox.Text =
-                "Multi-thread attack finished." +
-                "\nPassword found: " + result.IsFound +
-                "\nFound password: " + result.FoundPassword +
-                "\nAttempts: " + result.Attempts +
-                "\nElapsed time: " + result.ElapsedTime;
+                AttackResult result = await Task.Run(() =>
+                    attackService.RunMultiThreadAttack(targetHash, cancellationTokenSource.Token)
+                );
 
-            ShowComparisonIfBothAttacksDone();
+                lastMultiThreadResult = result;
+
+                AttackProgressBar.Value = 100;
+                ElapsedTimeTextBox.Text = result.ElapsedTime.ToString();
+                FoundPasswordTextBox.Text = result.FoundPassword;
+
+                if (result.IsFound)
+                {
+                    PerformanceLogTextBox.Text =
+                        "Multi-thread attack finished." +
+                        "\nPassword found: " + result.IsFound +
+                        "\nFound password: " + result.FoundPassword +
+                        "\nAttempts: " + result.Attempts +
+                        "\nElapsed time: " + result.ElapsedTime;
+                }
+                else
+                {
+                    AttackProgressBar.Value = 0;
+
+                    PerformanceLogTextBox.Text =
+                        "Multi-thread attack stopped or password not found." +
+                        "\nAttempts: " + result.Attempts +
+                        "\nElapsed time: " + result.ElapsedTime;
+                }
+
+                ShowComparisonIfBothAttacksDone();
+
+                MessageBox.Show("Multi-thread attack finished. You can take screenshot now.");
+            }
+            catch (Exception ex)
+            {
+                AttackProgressBar.Value = 0;
+                MessageBox.Show("Error: " + ex.Message);
+            }
+        }
+
+        private void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (cancellationTokenSource != null)
+            {
+                cancellationTokenSource.Cancel();
+                AttackProgressBar.Value = 0;
+                PerformanceLogTextBox.Text = "Stop requested. Running attack will stop safely.";
+            }
         }
 
         private void ShowComparisonIfBothAttacksDone()

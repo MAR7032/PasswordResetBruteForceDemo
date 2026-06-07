@@ -11,7 +11,7 @@ namespace PasswordResetBruteForceDemo
         private BruteForceGenerator generator = new BruteForceGenerator();
         private PasswordValidator validator = new PasswordValidator();
 
-        public AttackResult RunSingleThreadAttack(string targetHash)
+        public AttackResult RunSingleThreadAttack(string targetHash, CancellationToken token)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -20,10 +20,28 @@ namespace PasswordResetBruteForceDemo
 
             for (int length = 1; length <= 6; length++)
             {
+                if (token.IsCancellationRequested)
+                {
+                    break;
+                }
+
                 List<string> combinations = generator.GenerateCombinations(length);
 
                 for (int i = 0; i < combinations.Count; i++)
                 {
+                    if (token.IsCancellationRequested)
+                    {
+                        stopwatch.Stop();
+
+                        return new AttackResult
+                        {
+                            IsFound = false,
+                            FoundPassword = "",
+                            Attempts = attempts,
+                            ElapsedTime = stopwatch.Elapsed
+                        };
+                    }
+
                     attempts++;
 
                     string guess = combinations[i];
@@ -54,7 +72,7 @@ namespace PasswordResetBruteForceDemo
             };
         }
 
-        public AttackResult RunMultiThreadAttack(string targetHash)
+        public AttackResult RunMultiThreadAttack(string targetHash, CancellationToken token)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -67,35 +85,43 @@ namespace PasswordResetBruteForceDemo
 
             ParallelOptions options = new ParallelOptions
             {
-                MaxDegreeOfParallelism = maxThreads
+                MaxDegreeOfParallelism = maxThreads,
+                CancellationToken = token
             };
 
-            for (int length = 1; length <= 6; length++)
+            try
             {
-                if (isFound)
+                for (int length = 1; length <= 6; length++)
                 {
-                    break;
+                    if (token.IsCancellationRequested || isFound)
+                    {
+                        break;
+                    }
+
+                    List<string> combinations = generator.GenerateCombinations(length);
+
+                    Parallel.ForEach(combinations, options, (guess, loopState) =>
+                    {
+                        if (token.IsCancellationRequested || isFound)
+                        {
+                            loopState.Stop();
+                            return;
+                        }
+
+                        Interlocked.Increment(ref attempts);
+
+                        if (validator.IsPasswordCorrect(guess, targetHash))
+                        {
+                            foundPassword = guess;
+                            isFound = true;
+                            loopState.Stop();
+                        }
+                    });
                 }
-
-                List<string> combinations = generator.GenerateCombinations(length);
-
-                Parallel.ForEach(combinations, options, (guess, loopState) =>
-                {
-                    if (isFound)
-                    {
-                        loopState.Stop();
-                        return;
-                    }
-
-                    Interlocked.Increment(ref attempts);
-
-                    if (validator.IsPasswordCorrect(guess, targetHash))
-                    {
-                        foundPassword = guess;
-                        isFound = true;
-                        loopState.Stop();
-                    }
-                });
+            }
+            catch (OperationCanceledException)
+            {
+                // Attack was stopped by the user.
             }
 
             stopwatch.Stop();

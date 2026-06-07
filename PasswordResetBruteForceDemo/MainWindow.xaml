@@ -52,7 +52,8 @@
                 <Button x:Name="StopButton"
                         Content="Stop Attack"
                         Width="120"
-                        Height="35"/>
+                        Height="35"
+                        Click="StopButton_Click"/>
             </StackPanel>
 
             <TextBlock Text="Progress:" FontWeight="Bold"/>
