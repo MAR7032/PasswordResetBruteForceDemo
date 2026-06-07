@@ -7,6 +7,10 @@ namespace PasswordResetBruteForceDemo
         private PasswordGenerator passwordGenerator = new PasswordGenerator();
         private HashService hashService = new HashService();
         private BruteForceAttackService attackService = new BruteForceAttackService();
+        private PerformanceLogger performanceLogger = new PerformanceLogger();
+
+        private AttackResult lastSingleThreadResult;
+        private AttackResult lastMultiThreadResult;
 
         public MainWindow()
         {
@@ -25,6 +29,9 @@ namespace PasswordResetBruteForceDemo
             ElapsedTimeTextBox.Text = "";
             AttackProgressBar.Value = 0;
 
+            lastSingleThreadResult = null;
+            lastMultiThreadResult = null;
+
             PerformanceLogTextBox.Text = "Password generated and hashed successfully.";
         }
 
@@ -40,6 +47,7 @@ namespace PasswordResetBruteForceDemo
             AttackProgressBar.Value = 25;
 
             AttackResult result = attackService.RunSingleThreadAttack(HashTextBox.Text);
+            lastSingleThreadResult = result;
 
             AttackProgressBar.Value = 100;
             ElapsedTimeTextBox.Text = result.ElapsedTime.ToString();
@@ -51,6 +59,8 @@ namespace PasswordResetBruteForceDemo
                 "\nFound password: " + result.FoundPassword +
                 "\nAttempts: " + result.Attempts +
                 "\nElapsed time: " + result.ElapsedTime;
+
+            ShowComparisonIfBothAttacksDone();
         }
 
         private void StartMultiThreadButton_Click(object sender, RoutedEventArgs e)
@@ -65,6 +75,7 @@ namespace PasswordResetBruteForceDemo
             AttackProgressBar.Value = 25;
 
             AttackResult result = attackService.RunMultiThreadAttack(HashTextBox.Text);
+            lastMultiThreadResult = result;
 
             AttackProgressBar.Value = 100;
             ElapsedTimeTextBox.Text = result.ElapsedTime.ToString();
@@ -76,6 +87,21 @@ namespace PasswordResetBruteForceDemo
                 "\nFound password: " + result.FoundPassword +
                 "\nAttempts: " + result.Attempts +
                 "\nElapsed time: " + result.ElapsedTime;
+
+            ShowComparisonIfBothAttacksDone();
+        }
+
+        private void ShowComparisonIfBothAttacksDone()
+        {
+            if (lastSingleThreadResult != null && lastMultiThreadResult != null)
+            {
+                string comparisonLog = performanceLogger.CreateComparisonLog(
+                    lastSingleThreadResult,
+                    lastMultiThreadResult
+                );
+
+                PerformanceLogTextBox.Text = comparisonLog;
+            }
         }
     }
 }
